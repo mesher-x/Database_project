@@ -1,14 +1,6 @@
 CREATE TABLE users (
 	user_id		INTEGER		PRIMARY KEY,
-	first_name	TEXT,
-	last_name	TEXT,
-	city		TEXT,
-	age		INTEGER		CHECK (age > 0 AND age < 200),
-	login		TEXT 		NOT NULL UNIQUE,
-	password_hash 	TEXT		NOT NULL UNIQUE,
-	phone_number 	VARCHAR(15),
-	email 		TEXT,
-	social_network 	TEXT
+	login		TEXT 		NOT NULL UNIQUE
 );
 
 CREATE TABLE transport (
@@ -31,6 +23,7 @@ CREATE TABLE stops (
 
 CREATE TABLE journey (
 	journey_id	SERIAL 	PRIMARY KEY,
+	journey_name	TEXT		NOT NULL,
 	start		TEXT 		NOT NULL,
 	destination 	TEXT 		NOT NULL,
 	departure_date 	TIMESTAMP WITH TIME ZONE 	CHECK (departure_date - CURRENT_TIMESTAMP >= '0'),
