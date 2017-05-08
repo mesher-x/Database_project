@@ -1,113 +1,94 @@
-import connection
+from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
+import logging
+
+from connection import (connect_to_database, disconnect_from_database)
+from constants import CREATE_JOURNEY
+
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+data = {} #to save user input before uploading to database
+
 
 def create_journey(bot, update):
-    conn = connection.connect_to_database()
-    cur = conn.cursor()
-    SQL = "UPDATE users SET state = %s WHERE user_id = %s;"
-    data = ('/create_journey_name', update.message.from_user.id)
-    cur.execute(SQL, data)
-    global journey_info
-    journey_info = journey()
-    bot.sendMessage(chat_id=update.message.chat_id, text='Input journey name')
+    logger.info("%s creates a journey" % update.message.from_user.username)
+    update.message.reply_text('Input journey name')
+
+    return CREATE_JOURNEY['NAME']
 
 
-class journey:
-    def __init__(self):
-        pass
+def add_name(bot, update):
+    data['name'] = update.message.text
+    logger.info("%s named his journey %s" % (update.message.from_user.username, update.message.text))
+    update.message.reply_text('Input place of departure')
 
-    def add_name(self, bot, update):
-        self.name = update.message.text
-        cur = connection.conn.cursor()
-        SQL = "UPDATE users SET state = %s WHERE user_id = %s;"
-        data = ('/create_journey_departure_place', update.message.from_user.id)
-        cur.execute(SQL, data)
-        bot.sendMessage(chat_id=update.message.chat_id, text='Input place of departure')
+    return CREATE_JOURNEY['DEPARTURE_PLACE']
 
-    def add_departure_point(self, bot, update):
-        self.departure_point = update.message.text
-        cur = connection.conn.cursor()
-        SQL = "UPDATE users SET state = %s WHERE user_id = %s;"
-        data = ('/create_journey_destination', update.message.from_user.id)
-        cur.execute(SQL, data)
-        bot.sendMessage(chat_id=update.message.chat_id, text='Input destination')
+def add_departure_point(bot, update):
+    data['departure_point'] = update.message.text
+    logger.info("%s's journey starts from %s" % (update.message.from_user.username, update.message.text))
+    update.message.reply_text('Input destination')
 
-    def add_destination(self, bot, update):
-        self.destination = update.message.text
-        cur = connection.conn.cursor()
-        SQL = "UPDATE users SET state = %s WHERE user_id = %s;"
-        data = ('/create_journey_departure_date', update.message.from_user.id)
-        cur.execute(SQL, data)
-        bot.sendMessage(chat_id=update.message.chat_id, text='Input departure date(year-month-day, 0 for not stated)')
+    return CREATE_JOURNEY['DESTINATION']
 
-    def add_departure_date(self, bot, update):
-        self.departure_date = update.message.text if update.message.text != '0' else None
-        cur = connection.conn.cursor()
-        SQL = "UPDATE users SET state = %s WHERE user_id = %s;"
-        data = ('/create_journey_arrival_date', update.message.from_user.id)
-        cur.execute(SQL, data)
-        bot.sendMessage(chat_id=update.message.chat_id, text='Input arrival date(year-month-day, 0 for not stated)')
+def add_destination( bot, update):
+    data['destination'] = update.message.text
+    logger.info("%s's journey ends at %s" % (update.message.from_user.username, update.message.text))
+    update.message.reply_text('Input departure date(year-month-day, 0 for not stated)')
 
-    def add_arrival_date(self, bot, update):
-        self.arrival_date = update.message.text if update.message.text != '0' else None
-        cur = connection.conn.cursor()
-        SQL = "UPDATE users SET state = %s WHERE user_id = %s;"
-        data = ('/create_journey_budget', update.message.from_user.id)
-        cur.execute(SQL, data)
-        bot.sendMessage(chat_id=update.message.chat_id, text='Input estimated budget(0 for not stated)')
+    return CREATE_JOURNEY['DEPARTURE_DATE']
 
-    def add_budget(self, bot, update):
-        self.budget = update.message.text if update.message.text != '0' else None
-        cur = connection.conn.cursor()
-        SQL = "UPDATE users SET state = %s WHERE user_id = %s;"
-        data = ('/create_journey_publicity', update.message.from_user.id)
-        cur.execute(SQL, data)
-        bot.sendMessage(chat_id=update.message.chat_id, text='Do you want this journey to appear in search results?(y/n)')
+def add_departure_date( bot, update):
+    data['departure_date'] = update.message.text if update.message.text != '0' else None
+    logger.info("%s's journey starts at %s" % (update.message.from_user.username, data['departure_date']))
+    update.message.reply_text('Input arrival date(year-month-day, 0 for not stated)')
 
-    def add_publicity(self, bot, update):
-        self.publicity = (update.message.text.lower() == 'y')
+    return CREATE_JOURNEY['ARRIVAL_DATE']
 
-    def put_in_database(self, bot, update):
-        try:
-            cur = connection.conn.cursor()
-            #new journey
-            SQL = "INSERT INTO journey (journey_name, departure_point, destination, departure_date, arrival_date, is_public, budget) VALUES (%s, %s, %s, %s, %s, %s, %s);"
-            data = (self.name, self.departure_point, self.destination, self.departure_date, self.arrival_date, self.publicity, self.budget,)
-            cur.execute(SQL, data)
-            print 'inserted'
-            #what journey_id does new journey have
-            SQL = "SELECT currval('journey_journey_id_seq');"
-            cur.execute(SQL)
-            journey_id = cur.fetchone()[0]
-            #accordance of user and journey
-            SQL = "INSERT INTO travelers (journey_id, user_id) VALUES (%s, %s);"
-            data = (journey_id, update.message.from_user.id,)
-            cur.execute(SQL, data)
-            print 'travelers'
-            #update user state
-            SQL = "UPDATE users SET state = %s WHERE user_id = %s;"
-            data = ('start', update.message.from_user.id)
-            cur.execute(SQL, data)
-            bot.sendMessage(chat_id=update.message.chat_id, text='Congratulations, journey ' + self.name + ' is created')
-        except Exception as e:
-            bot.sendMessage(chat_id=update.message.chat_id, text='wrong input, journey ' + self.name + ' is not created')
-            SQL = "UPDATE users SET state = %s WHERE user_id = %s;"
-            data = ('start', update.message.from_user.id)
-            cur.execute(SQL, data)
-            print e
+def add_arrival_date( bot, update):
+    data['arrival_date'] = update.message.text if update.message.text != '0' else None
+    logger.info("%s's journey ends at %s" % (update.message.from_user.username, data['arrival_date']))
+    update.message.reply_text('Input estimated budget(0 for not stated)')
 
-    # def choose_action(self, state, bot, update):
-    #     if state == '/create_journey_name':
-    #         self.add_name(bot, update)
-    #     elif state == '/create_journey_departure_place':
-    #         self.add_departure_point(bot, update)
-    #     elif state == '/create_journey_destination':
-    #         self.add_destination(bot, update)
-    #     elif state == '/create_journey_departure_date':
-    #         self.add_departure_date(bot, update)
-    #     elif state == '/create_journey_arrival_date':
-    #         self.add_arrival_date(bot, update)
-    #     elif state == '/create_journey_budget':
-    #         self.add_budget(bot, update)
-    #     elif state == '/create_journey_publicity':
-    #         self.add_publicity(bot, update)
-    #         self.put_in_database(bot, update)
+    return CREATE_JOURNEY['BUDGET']
+
+def add_budget( bot, update):
+    data['budget'] = update.message.text if update.message.text != '0' else None
+    logger.info("%s's journey estimated cost is %s" % (update.message.from_user.username, data['budget']))
+    reply_keyboard = [['Yes', 'No']]
+    update.message.reply_text('Do you want this journey to appear in search results?',
+                              reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+
+    return CREATE_JOURNEY['PUBLICITY_AND_ADDING']
+
+def add_publicity( bot, update):
+    data['publicity'] = (update.message.text.lower() == 'Yes')
+    put_in_database(bot, update)
+
+    return -1 #end of conversation
+
+def put_in_database( bot, update):
+    try:
+        conn = connect_to_database()
+        cur = conn.cursor()
+        #new journey
+        SQL = "INSERT INTO journey (journey_name, departure_point, destination, departure_date, arrival_date, is_public, budget) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+        _data = (data['name'], data['departure_point'], data['destination'], data['departure_date'], data['arrival_date'], data['publicity'], data['budget'],)
+        cur.execute(SQL, _data)
+        logger.info("%s's journey %s has been putted in database" % (update.message.from_user.username, data['name']))
+        #what journey_id does new journey have
+        SQL = "SELECT currval('journey_journey_id_seq');"
+        cur.execute(SQL)
+        journey_id = cur.fetchone()[0]
+        #accordance of user and journey
+        SQL = "INSERT INTO travelers (journey_id, user_id) VALUES (%s, %s);"
+        _data = (journey_id, update.message.from_user.id,)
+        cur.execute(SQL, _data)
+        logger.info("%s participates in journey %s" % (update.message.from_user.username, data['name']))
+        disconnect_from_database(conn)
+        update.message.reply_text('Congratulations, journey ' + data['name'] + ' has been created')
+    except Exception as e:
+        update.message.reply_text('wrong input, journey ' + data['name'] + ' has not been created')
+        logger.info("Exception %s has happened" % e)

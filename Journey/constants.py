@@ -1,10 +1,11 @@
 token = '359898542:AAGLWmglnnbWROTxze_h0vv8bYjVtOJSVIc'
 
-# def connect_to_database():
-#     try:
-#         global conn
-#         conn = psycopg2.connect("dbname='postgres' user='postgres' host='localhost' password='postgres'")
-#         conn.autocommit = True
-#         print 'connect'
-#     except:
-#         print "I am unable to connect to the database"
+CREATE_JOURNEY = {
+    'NAME': 0,
+    'DEPARTURE_PLACE': 1,
+    'DESTINATION': 2,
+    'DEPARTURE_DATE': 3,
+    'ARRIVAL_DATE': 4,
+    'BUDGET': 5,
+    'PUBLICITY_AND_ADDING': 6
+}
