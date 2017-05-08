@@ -98,11 +98,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-#commands: create jorney(name), edit journey, show(гдеб куда чего зачем сколько), connect to journey
-# editing of profile - /edit_profile, последовательное заполнение полей, при запросе на внесение информации
-# указывать обязательность
-# creation of journey - /create, последовательное заполнение полей, при запросе на внесение информации
-# указывать обязательность
-# editing of journey - новая точка, выбор транспорта
-#
+    
