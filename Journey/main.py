@@ -5,9 +5,10 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, Rege
 import telegram
 import logging
 
-from constants import (CREATE_JOURNEY, token)
-import createJourney
+from constants import (CREATE_JOURNEY, token, ADD_STOP)
 from connection import (connect_to_database, disconnect_from_database)
+import createJourney
+import addStop
 
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -18,16 +19,17 @@ def start(bot, update):
     conn = connect_to_database()
     cur = conn.cursor()
     SQL = "SELECT count(1) FROM users WHERE login = %s;"
-    data = (update.message.from_user.username,)
-    cur.execute(SQL, data)
+    query_data = (update.message.from_user.username,)
+    cur.execute(SQL, query_data)
     result = cur.fetchone()[0]
     if result == 0:
         SQL = "INSERT INTO users (user_id, login) VALUES (%s, %s);"
-        data = (update.message.from_user.id, update.message.from_user.username,)
-        cur.execute(SQL, data)
-        disconnect_from_database(conn)
+        query_data = (update.message.from_user.id, update.message.from_user.username,)
+        cur.execute(SQL, query_data)
         logging.info('user with user_id=%s, username=%s has been added to the database' % (update.message.from_user.id, update.message.from_user.username))
 
+    cur.close()
+    disconnect_from_database(conn)
     update.message.reply_text('Hello!\nUse this bot to plan your journeys and participate in journeys of others')
 
 
@@ -88,6 +90,32 @@ def main():
 
     dispatcher.add_handler(create_journey_handler)
 
+    add_stop_handler = ConversationHandler(
+        entry_points=[CommandHandler('add_stop', addStop.add_stop)],
+
+        states={
+            ADD_STOP['JOURNEY_NAME']: [MessageHandler(Filters.text, addStop.add_journey_name)],
+
+            ADD_STOP['DEPARTURE_PLACE']: [MessageHandler(Filters.text, addStop.add_departure_place)],
+
+            ADD_STOP['DESTINATION']: [MessageHandler(Filters.text, addStop.add_destination)],
+
+            ADD_STOP['DEPARTURE_TIME']: [MessageHandler(Filters.text, addStop.add_departure_time)],
+
+            ADD_STOP['ARRIVAL_TIME']: [MessageHandler(Filters.text, addStop.add_arrival_time)],
+
+            ADD_STOP['PRICE']: [MessageHandler(Filters.text, addStop.add_price)],
+
+            ADD_STOP['TYPE']: [MessageHandler(Filters.text, addStop.add_type)],
+
+            ADD_STOP['IS_SHEDULED']: [MessageHandler(Filters.text, addStop.add_is_scheduled)],
+        },
+
+        fallbacks=[CommandHandler('cancel', cancel)]
+    )
+
+    dispatcher.add_handler(add_stop_handler)
+
     unknown_handler = MessageHandler(Filters.command, unknown)
     dispatcher.add_handler(unknown_handler)
 
@@ -98,4 +126,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    

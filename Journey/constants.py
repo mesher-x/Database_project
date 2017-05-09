@@ -9,3 +9,14 @@ CREATE_JOURNEY = {
     'BUDGET': 5,
     'PUBLICITY_AND_ADDING': 6
 }
+
+ADD_STOP = {
+    'JOURNEY_NAME': 0,
+    'DEPARTURE_PLACE': 1,
+    'DESTINATION': 2,
+    'DEPARTURE_TIME': 3,
+    'ARRIVAL_TIME': 4,
+    'PRICE': 5,
+    'TYPE': 6,
+    'IS_SHEDULED': 7
+}
