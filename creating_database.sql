@@ -1,14 +1,14 @@
 CREATE TABLE users (
 	user_id		INTEGER		PRIMARY KEY,
-	login		TEXT 		NOT NULL UNIQUE
+	login		TEXT 		NOT NULL UNIQUE,
 );
 
 CREATE TABLE transport (
 	transport_id 	SERIAL		PRIMARY KEY,
-	departure_point TEXT,
-	destination 	TEXT,
-	departure_time 	TIMESTAMP WITH TIME ZONE,
-	arrival_time	TIMESTAMP WITH TIME ZONE,
+	departure_point TEXT	NOT NULL,
+	destination 	TEXT	NOT NULL,
+	departure_time 	TIMESTAMP WITH TIME ZONE	NOT NULL,
+	arrival_time	TIMESTAMP WITH TIME ZONE	NOT NULL,
 	price		MONEY,
 	type		TEXT		NOT NULL,
 	is_scheduled	BOOLEAN		NOT NULL
@@ -23,8 +23,7 @@ CREATE TABLE stops (
 
 CREATE TABLE journey (
 	journey_id	SERIAL 	PRIMARY KEY,
-	journey_name	TEXT		NOT NULL,
-	start		TEXT 		NOT NULL,
+	departure_point		TEXT 		NOT NULL,
 	destination 	TEXT 		NOT NULL,
 	departure_date 	TIMESTAMP WITH TIME ZONE 	CHECK (departure_date - CURRENT_TIMESTAMP >= '0'),
 	arrival_date 	TIMESTAMP WITH TIME ZONE 	CHECK (arrival_date - CURRENT_TIMESTAMP >= '0'),
@@ -37,6 +36,7 @@ CREATE TABLE journey (
 CREATE TABLE travelers (
 	journey_id 	INTEGER 	REFERENCES journey (journey_id) ON DELETE CASCADE,
 	user_id 	INTEGER 	REFERENCES users (user_id) ON DELETE CASCADE,
+	is_host		BOOLEAN		NOT NULL,
 	PRIMARY KEY(journey_id, user_id)
 );
 
