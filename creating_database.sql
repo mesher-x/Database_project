@@ -27,7 +27,7 @@ CREATE TABLE journey (
 	destination 	TEXT 		NOT NULL,
 	departure_date 	TIMESTAMP WITH TIME ZONE 	CHECK (departure_date - CURRENT_TIMESTAMP >= '0'),
 	arrival_date 	TIMESTAMP WITH TIME ZONE 	CHECK (arrival_date - CURRENT_TIMESTAMP >= '0'),
-	first_stop	INTEGER 	REFERENCES stops (stop_id) ON DELETE RESTRICT,
+	first_stop	INTEGER 	REFERENCES stops (stop_id) ON DELETE SET_NULL,
 	is_public	BOOLEAN 	NOT NULL,
 	budget		MONEY,
 	CHECK (arrival_date - departure_date >= '0')
