@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 import sys
 sys.path.insert(0, '/usr/local/lib/python2.7/site-packages')
-from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler, ConversationHandler)
+from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler, ConversationHandler, CallbackQueryHandler)
 import telegram
 import logging
 
-from constants import (CREATE_JOURNEY, token, ADD_STOP)
+from constants import (CREATE_JOURNEY, token, ADD_STOP, MY_JOURNEY)
 from connection import (connect_to_database, disconnect_from_database)
 import createJourney
 import addStop
-
+import myJournies
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,7 +39,9 @@ def help(bot, update):
 
 def cancel(bot, update):
     logger.info("User %s canceled command" % update.message.from_user.username)
-    update.message.reply_text('command has been canceled')
+    reply_markup = telegram.ReplyKeyboardRemove()
+    bot.send_message(chat_id=update.message.chat_id, text="command has been canceled", reply_markup=reply_markup)
+    return -1
 
 
 def unknown(bot, update):
@@ -63,8 +65,8 @@ def main():
     help_handler = CommandHandler('help', help)
     dispatcher.add_handler(help_handler)
 
-    cancel_handler = CommandHandler('cancel', cancel)
-    dispatcher.add_handler(cancel_handler)
+    # cancel_handler = CommandHandler('cancel', cancel)
+    # dispatcher.add_handler(cancel_handler)
 
     create_journey_handler = ConversationHandler(
         entry_points=[CommandHandler('create_journey', createJourney.create_journey)],
@@ -109,12 +111,31 @@ def main():
             ADD_STOP['TYPE']: [MessageHandler(Filters.text, addStop.add_type)],
 
             ADD_STOP['IS_SHEDULED']: [MessageHandler(Filters.text, addStop.add_is_scheduled)],
+
+            ADD_STOP['CHOOSEN']: [CallbackQueryHandler(addStop.choosen)]
         },
 
         fallbacks=[CommandHandler('cancel', cancel)]
     )
 
     dispatcher.add_handler(add_stop_handler)
+
+    my_journies_handler = ConversationHandler(
+        entry_points=[CommandHandler('my_journies', myJournies.my_journies)],
+
+        states={
+            MY_JOURNEY['SHOW_OR_DELETE_JOURNEY']: [CallbackQueryHandler(myJournies.show_or_delete_journey)],
+
+            MY_JOURNEY['EDITING']: [CallbackQueryHandler(myJournies.edit_journey)]
+
+        },
+
+        fallbacks=[CommandHandler('cancel', cancel)]
+    )
+
+    dispatcher.add_handler(my_journies_handler)
+
+    #updater.dispatcher.add_handler(CallbackQueryHandler(addStop.choosen))
 
     unknown_handler = MessageHandler(Filters.command, unknown)
     dispatcher.add_handler(unknown_handler)

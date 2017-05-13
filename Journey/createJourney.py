@@ -30,7 +30,7 @@ def add_name(bot, update):
             WHERE 	user_id = %s
                     AND journey_name = %s;
             """
-    query_data = (update.message.from_user.id, journey_name)
+    query_data = (update.message.from_user.id, journey_name,)
     cur.execute(SQL, query_data)
     result = cur.fetchone()[0]
     cur.close()
@@ -82,7 +82,7 @@ def add_budget( bot, update):
     return CREATE_JOURNEY['PUBLICITY_AND_ADDING']
 
 def add_publicity( bot, update):
-    data['publicity'] = (update.message.text.lower() == 'Yes')
+    data['publicity'] = (update.message.text.lower() == 'yes')
     put_in_database(bot, update)
 
     return -1 #end of conversation
@@ -101,8 +101,8 @@ def put_in_database( bot, update):
         cur.execute(SQL)
         journey_id = cur.fetchone()[0]
         #accordance of user and journey
-        SQL = "INSERT INTO travelers (journey_id, user_id) VALUES (%s, %s);"
-        query_data = (journey_id, update.message.from_user.id,)
+        SQL = "INSERT INTO travelers (journey_id, user_id, is_host) VALUES (%s, %s, %s);"
+        query_data = (journey_id, update.message.from_user.id, True)
         cur.execute(SQL, query_data)
         cur.close()
         disconnect_from_database(conn)

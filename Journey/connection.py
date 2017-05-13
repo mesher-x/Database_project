@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, '/usr/local/lib/python2.7/site-packages')
 import psycopg2
 import logging
 

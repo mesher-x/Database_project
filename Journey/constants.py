@@ -18,5 +18,11 @@ ADD_STOP = {
     'ARRIVAL_TIME': 4,
     'PRICE': 5,
     'TYPE': 6,
-    'IS_SHEDULED': 7
+    'IS_SHEDULED': 7,
+    'CHOOSEN': 8
+}
+
+MY_JOURNEY = {
+    'SHOW_OR_DELETE_JOURNEY': 0,
+    'EDITING': 1
 }
