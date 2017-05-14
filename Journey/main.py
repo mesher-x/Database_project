@@ -5,11 +5,12 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, Rege
 import telegram
 import logging
 
-from constants import (CREATE_JOURNEY, token, ADD_STOP, MY_JOURNEY)
+from constants import (CREATE_JOURNEY, token, ADD_STOP, MY_JOURNEY, SEARCH)
 from connection import (connect_to_database, disconnect_from_database)
 import createJourney
 import addStop
 import myJournies
+import Search
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ def start(bot, update):
 
 
 def help(bot, update):
-    update.message.reply_text('list of commands')
+    update.message.reply_text('start - begin interaction\nhelp - list of commands\ncancel - cancel current command\ncreate_journey - basic plan of new journey\nadd_stop - add new stops to the journey consequentially\nmy_journies - see the list of journies you participate in, edit and delete ones you created\nsearch - search for journies to join to')
 
 
 def cancel(bot, update):
@@ -81,8 +82,6 @@ def main():
             CREATE_JOURNEY['DEPARTURE_DATE']: [MessageHandler(Filters.text, createJourney.add_departure_date)],
 
             CREATE_JOURNEY['ARRIVAL_DATE']: [MessageHandler(Filters.text, createJourney.add_arrival_date)],
-
-            CREATE_JOURNEY['BUDGET']: [MessageHandler(Filters.text, createJourney.add_budget)],
 
             CREATE_JOURNEY['PUBLICITY_AND_ADDING']: [MessageHandler(Filters.text, createJourney.add_publicity)],
         },
@@ -134,6 +133,30 @@ def main():
     )
 
     dispatcher.add_handler(my_journies_handler)
+
+    search_handler = ConversationHandler(
+        entry_points=[CommandHandler('search', Search.search)],
+
+        states={
+            SEARCH['DEPARTURE_POINT']: [MessageHandler(Filters.text, Search.add_departure_point)],
+
+            SEARCH['DESTINATION']: [MessageHandler(Filters.text, Search.add_destination)],
+
+            SEARCH['DEPARTURE_DATE']: [MessageHandler(Filters.text, Search.add_departure_date)],
+
+            SEARCH['ARRIVAL_DATE']: [MessageHandler(Filters.text, Search.add_arrival_date)],
+
+            SEARCH['BUDGET']: [MessageHandler(Filters.text, Search.add_budget)],
+
+            SEARCH['PLACES']: [MessageHandler(Filters.text, Search.add_place)],
+
+            SEARCH['SHOW_OR_JOIN_OR_OTHERS']: [CallbackQueryHandler(Search.show_or_join_or_others)]
+        },
+
+        fallbacks=[CommandHandler('cancel', cancel)]
+    )
+
+    dispatcher.add_handler(search_handler)
 
     #updater.dispatcher.add_handler(CallbackQueryHandler(addStop.choosen))
 

@@ -44,12 +44,14 @@ def add_name(bot, update):
 
     return CREATE_JOURNEY['DEPARTURE_PLACE']
 
+
 def add_departure_point(bot, update):
     data['departure_point'] = update.message.text.lower()
     logger.info("%s's journey starts from %s" % (update.message.from_user.username, update.message.text))
     update.message.reply_text('Input destination')
 
     return CREATE_JOURNEY['DESTINATION']
+
 
 def add_destination( bot, update):
     data['destination'] = update.message.text.lower()
@@ -58,6 +60,7 @@ def add_destination( bot, update):
 
     return CREATE_JOURNEY['DEPARTURE_DATE']
 
+
 def add_departure_date( bot, update):
     data['departure_date'] = update.message.text if update.message.text != '0' else None
     logger.info("%s's journey starts at %s" % (update.message.from_user.username, data['departure_date']))
@@ -65,35 +68,31 @@ def add_departure_date( bot, update):
 
     return CREATE_JOURNEY['ARRIVAL_DATE']
 
+
 def add_arrival_date( bot, update):
     data['arrival_date'] = update.message.text if update.message.text != '0' else None
     logger.info("%s's journey ends at %s" % (update.message.from_user.username, data['arrival_date']))
-    update.message.reply_text('Input estimated budget(0 for not stated)')
-
-    return CREATE_JOURNEY['BUDGET']
-
-def add_budget( bot, update):
-    data['budget'] = update.message.text if update.message.text != '0' else None
-    logger.info("%s's journey estimated cost is %s" % (update.message.from_user.username, data['budget']))
     reply_keyboard = [['Yes', 'No']]
     update.message.reply_text('Do you want this journey to appear in search results?',
                               reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
     return CREATE_JOURNEY['PUBLICITY_AND_ADDING']
 
+
 def add_publicity( bot, update):
     data['publicity'] = (update.message.text.lower() == 'yes')
     put_in_database(bot, update)
 
-    return -1 #end of conversation
+    return -1
+
 
 def put_in_database( bot, update):
     try:
         conn = connect_to_database()
         cur = conn.cursor()
         #new journey
-        SQL = "INSERT INTO journey (journey_name, departure_point, destination, departure_date, arrival_date, is_public, budget) VALUES (%s, %s, %s, %s, %s, %s, %s);"
-        query_data = (data['name'], data['departure_point'], data['destination'], data['departure_date'], data['arrival_date'], data['publicity'], data['budget'],)
+        SQL = "INSERT INTO journey (journey_name, departure_point, destination, departure_date, arrival_date, is_public) VALUES (%s, %s, %s, %s, %s, %s);"
+        query_data = (data['name'], data['departure_point'], data['destination'], data['departure_date'], data['arrival_date'], data['publicity'],)
         cur.execute(SQL, query_data)
         logger.info("%s's journey %s has been putted in database" % (update.message.from_user.username, data['name']))
         #what journey_id does new journey have

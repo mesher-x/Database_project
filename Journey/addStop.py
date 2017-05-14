@@ -109,7 +109,7 @@ def add_arrival_time(bot, update):
 
 def add_price(bot, update):
     logger.info("%s inputs price" % update.message.from_user.username)
-    data['price'] = update.message.text if update.message.text != '0' else None
+    data['price'] = float(update.message.text) if update.message.text != '0' else None
     update.message.reply_text('input type of the transport(0 for not stated)')
 
     return ADD_STOP['TYPE']
@@ -175,7 +175,7 @@ def add_is_scheduled(bot, update):
         disconnect_from_database(conn)
 
         for row in transport:
-            keyboard = [[InlineKeyboardButton("Select", callback_data=str(row[0]))]]
+            keyboard = [[InlineKeyboardButton("Select", callback_data=str(row[0]) + str(row[5]))]]
             reply_markup = InlineKeyboardMarkup(keyboard)
             update.message.reply_text(
                 'departure:\n place: ' + row[1] + '    time: ' + str(row[3])[:16] + '\narrival:\n place: ' + row[2] + '    time: ' + str(row[4])[:16] + '\nprice: ' + row[5] + '\ntype: ' + row[6],
@@ -200,9 +200,13 @@ def add_is_scheduled(bot, update):
 def not_scheduled(cur):
     if data['type'] is None:
         data['type'] = 'any'
-    SQL = "INSERT INTO transport (departure_point, destination, departure_time, arrival_time, price, type, is_scheduled) VALUES (%s, %s, %s, %s, %s, %s, %s);"
-    query_data = (data['departure_place'], data['destination'], data['departure_time'], data['arrival_time'], data['price'], data['type'], False,)
-    cur.execute(SQL, query_data)
+    try:
+        SQL = "INSERT INTO transport (departure_point, destination, departure_time, arrival_time, price, type, is_scheduled) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+        query_data = (data['departure_place'], data['destination'], data['departure_time'], data['arrival_time'], data['price'], data['type'], False,)
+        cur.execute(SQL, query_data)
+    except Exception as e:
+        update.message.reply_text('wrong input, stop has not been added')
+        logger.info("Exception %s has happened" % e)
 
     SQL = "SELECT currval('transport_transport_id_seq');"
     cur.execute(SQL)
@@ -213,7 +217,7 @@ def not_scheduled(cur):
 
 def choosen(bot, update):
     if data['been_pushed']:
-        return -1
+        return
     data['been_pushed'] = True
     choice = update.callback_query
     conn = connect_to_database()
@@ -221,7 +225,8 @@ def choosen(bot, update):
     if choice.data == 'cancel':
         not_scheduled(cur)
     else:
-        upload_new_stop_and_update_last(cur, int(choice.data))
+        data['price'] = float(choice.data[choice.data.find('$') + 1:])
+        upload_new_stop_and_update_last(cur, int(choice.data[:choice.data.find('$')]))
 
     cur.close()
     disconnect_from_database(conn)
@@ -259,3 +264,14 @@ def upload_new_stop_and_update_last(cur, transport_id):
 
     if data['is_first']:
         is_first(cur)
+
+    SQL = "SELECT budget FROM journey WHERE journey_id = %s;"
+    query_data = (data['journey_id'],)
+    cur.execute(SQL, query_data)
+    old_budget = cur.fetchone()[0] if cur.fetchone()[0] is not None else 0
+    if data['price'] is None:
+        data['price'] = 0
+
+    SQL = "UPDATE journey SET budget = %s WHERE journey_id = %s;"
+    query_data = (old_budget + data['price'], data['journey_id'],)
+    cur.execute(SQL, query_data)
