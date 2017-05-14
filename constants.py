@@ -1,0 +1,37 @@
+token = '359898542:AAGLWmglnnbWROTxze_h0vv8bYjVtOJSVIc'
+
+CREATE_JOURNEY = {
+    'NAME': 0,
+    'DEPARTURE_PLACE': 1,
+    'DESTINATION': 2,
+    'DEPARTURE_DATE': 3,
+    'ARRIVAL_DATE': 4,
+    'PUBLICITY_AND_ADDING': 5
+}
+
+ADD_STOP = {
+    'JOURNEY_NAME': 0,
+    'DEPARTURE_PLACE': 1,
+    'DESTINATION': 2,
+    'DEPARTURE_TIME': 3,
+    'ARRIVAL_TIME': 4,
+    'PRICE': 5,
+    'TYPE': 6,
+    'IS_SHEDULED': 7,
+    'CHOOSEN': 8
+}
+
+MY_JOURNEY = {
+    'SHOW_OR_DELETE_JOURNEY': 0,
+    'EDITING': 1
+}
+
+SEARCH = {
+    'DEPARTURE_POINT': 0,
+    'DESTINATION': 1,
+    'DEPARTURE_DATE': 2,
+    'ARRIVAL_DATE': 3,
+    'BUDGET': 4,
+    'PLACES': 5,
+    'SHOW_OR_JOIN_OR_OTHERS': 6
+}

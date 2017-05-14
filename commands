@@ -1,0 +1,7 @@
+start - begin interaction
+help - list of commands
+cancel - cancel current command
+create_journey - basic plan of new journey
+add_stop - add new stops to the journey consequentially
+my_journies - see the list of journies you participate in, edit and delete ones you created
+search - search for journies to join to
